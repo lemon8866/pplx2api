@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"pplx2api/logger"
 	"time"
+	"unicode"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -74,12 +75,28 @@ func ReturnOpenAIResponse(text string, stream bool, gc *gin.Context) error {
 	}
 }
 
+func estimateTokens(text string) int {
+	if text == "" {
+		return 0
+	}
+
+	tokens := 0
+	for _, r := range text {
+		if r < 128 {
+			tokens += 1
+		} else {
+			tokens += 2
+		}
+	}
+	return tokens
+}
+
 func streamRespose(text string, gc *gin.Context) error {
 	openAIResp := &OpenAISrteamResponse{
 		ID:      uuid.New().String(),
 		Object:  "chat.completion.chunk",
 		Created: time.Now().Unix(),
-		Model:   "claude-3-7-sonnet-20250219",
+		Model:   "gemini-3-flash",
 		Choices: []StreamChoice{
 			{
 				Index: 0,
@@ -107,11 +124,12 @@ func streamRespose(text string, gc *gin.Context) error {
 }
 
 func noStreamResponse(text string, gc *gin.Context) error {
+	completionTokens := estimateTokens(text)
 	openAIResp := &OpenAIResponse{
 		ID:      uuid.New().String(),
 		Object:  "chat.completion",
 		Created: time.Now().Unix(),
-		Model:   "claude-3-7-sonnet-20250219",
+		Model:   "gemini-3-flash",
 		Choices: []NoStreamChoice{
 			{
 				Index: 0,
@@ -122,6 +140,11 @@ func noStreamResponse(text string, gc *gin.Context) error {
 				Logprobs:     nil,
 				FinishReason: "stop",
 			},
+		},
+		Usage: Usage{
+			PromptTokens:     0,
+			CompletionTokens: completionTokens,
+			TotalTokens:      completionTokens,
 		},
 	}
 
