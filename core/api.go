@@ -498,6 +498,7 @@ func (c *Client) UloadFileToCloudinary(uploadInfo CloudinaryUploadInfo, contentT
 			"x-amz-security-token": uploadInfo.Xamzsecuritytoken,
 			"acl":                  uploadInfo.ACL,
 			"Content-Type":         "image/jpeg", // Assuming image/jpeg for images
+			"x-amz-meta-is_text_only": "false",
 		}
 	} else {
 		formFields = map[string]string{
@@ -509,6 +510,7 @@ func (c *Client) UloadFileToCloudinary(uploadInfo CloudinaryUploadInfo, contentT
 			"x-amz-security-token": uploadInfo.Xamzsecuritytoken,
 			"policy":               uploadInfo.Policy,
 			"signature":            uploadInfo.Signature,
+			"x-amz-meta-is_text_only": "true",
 		}
 	}
 	var requestBody bytes.Buffer
